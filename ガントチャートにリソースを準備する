@@ -1,0 +1,18 @@
+prepareGanttChart
+	"ガントチャートにリソースを準備する (空のガントチャートを作成する)"
+
+	| resourceSet |
+	self ganttChart initialize.
+	resourceSet := Set new.
+	self resourceDictionary do: 
+			[:resources |
+			(resources at: #resourceList) do: [:resource | resourceSet add: resource]].
+	resourceSet do: 
+			[:resource |
+			| resourceInformation |
+			resourceInformation := Dictionary new.
+			resourceInformation
+				at: #finishTime put: 0;
+				at: #operations put: OrderedCollection new.
+			self ganttChart resourceDictionary at: resource put: resourceInformation].
+	^self

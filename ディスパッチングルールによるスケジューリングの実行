@@ -1,0 +1,13 @@
+schedulingByDRwith: aRule
+	"ディスパッチングルールによるスケジューリングの実行"
+
+	| candidate selection |
+	aRule notNil
+		ifTrue: 
+			[self rule: aRule.
+			[self jobDictionary isEmpty] whileFalse: 
+					[candidate := self pickUpCandidate.
+					selection := self selectNextOperation: candidate byRule: rule.
+					self allocateOperation: selection]]
+		ifFalse: [self halt: 'ルールを選択してください．'].
+	^self

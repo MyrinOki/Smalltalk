@@ -1,0 +1,73 @@
+readInitialSchedule
+	"CSVファイルからスケジュールデータを読み込む"
+
+	| ignoreChar stream sepCR sepCom readingBlock eachLineOC resultDC tempDataFile odNum |
+	tempDataFile := self dataFile value asFilename.
+	sepCR := Character cr.
+	sepCom := $,.
+	ignoreChar := '#'.
+	resultDC := Dictionary new.
+	eachLineOC := OrderedCollection new.
+	stream := tempDataFile contentsOfEntireFile.
+	stream := stream readStream.
+	odNum := 1.
+	readingBlock :=
+			[[stream atEnd] whileFalse: [eachLineOC add: (stream upTo: sepCR)]].
+	readingBlock valueNowOrOnUnwindDo: [stream close].
+	eachLineOC do: 
+			[:line |
+			| tLine tElementOC tBlock |
+			tLine := line readStream.
+			tElementOC := OrderedCollection new.
+			tBlock := [[tLine atEnd] whileFalse: [tElementOC add: (tLine upTo: sepCom)]].
+			tBlock valueNowOrOnUnwindDo: [tLine close].
+			tElementOC first = ignoreChar
+				ifFalse: 
+					[tElementOC first = '<JOB>'
+						ifTrue: 
+							[| jobName |
+							tElementOC removeFirst.
+							jobName := tElementOC removeFirst asSymbol.
+							resultDC at: jobName put: Dictionary new.
+							(resultDC at: jobName) at: #dueDate put: tElementOC removeFirst asNumber.
+							(resultDC at: jobName) at: #processPlan put: OrderedCollection new.
+							(resultDC at: jobName) at: #previousProcess put: #S.
+							1 to: tElementOC size
+								by: 2
+								do: 
+									[:i |
+									| process |
+									process := Dictionary new.
+									process
+										at: #Resource put: (tElementOC at: i) asSymbol;
+										at: #processingTime put: (tElementOC at: i + 1) asNumber.
+									((resultDC at: jobName) at: #processPlan) add: process]].
+					tElementOC first = '<RESOURCE>'
+						ifTrue: 
+							[| resourceName |
+							tElementOC removeFirst.
+							resourceName := tElementOC removeFirst asSymbol.
+							resultDC at: resourceName put: Dictionary new.
+							(resultDC at: resourceName) at: #resourceList put: OrderedCollection new.
+							1 to: tElementOC size
+								do: 
+									[:i |
+									((resultDC at: resourceName) at: #resourceList)
+										add: (tElementOC at: i) asSymbol]].
+					tElementOC first = '<DISTANCE>'
+						ifTrue: 
+							[| origin destination distance odName |
+							tElementOC removeFirst.
+							origin := tElementOC removeFirst asSymbol.
+							destination := tElementOC removeFirst asSymbol.
+							distance := tElementOC removeFirst asNumber.
+							odName := #od , (odNum asString).
+							resultDC at: odName put: Dictionary new.
+							(resultDC at: odName) at: #origin put: origin.
+							(resultDC at: odName) at: #destination put: destination.
+							(resultDC at: odName) at: #distance put: distance.
+							odNum := odNum + 1]]].
+	Transcript
+		cr;
+		show: self dataFile value printString , 'からスケジュールデータを読み込みました'.
+	^resultDC

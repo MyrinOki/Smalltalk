@@ -1,0 +1,21 @@
+showResultInTranscript
+
+	| resources |
+	Transcript
+		cr;
+		cr.
+	resources := SortedCollection new.
+	self ganttChart resourceDictionary keysDo: [:r | resources add: r].
+	resources do: 
+			[:resource |
+			| operations |
+			operations := self ganttChart resourceDictionary at: resource.
+			Transcript
+				show: resource printString;
+				tab.
+			(operations at: #operations) do: 
+					[:op |
+					Transcript
+						show: op jobName printString;
+						tab].
+			Transcript cr]

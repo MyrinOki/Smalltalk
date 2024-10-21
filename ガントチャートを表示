@@ -1,0 +1,5 @@
+gcOpener
+	"ガントチャートを表示"
+
+	self ganttChart createDataForDisplay.
+	self ganttChart viewGanttChart

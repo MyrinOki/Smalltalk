@@ -1,0 +1,16 @@
+makeProcessDictionary: scheduleData
+	"工程順序の情報を読み込む"
+
+
+	self jobDictionary: Dictionary new.
+	self resourceDictionary: Dictionary new.
+	self distanceDictionary: Dictionary new.
+	scheduleData keysAndValuesDo: 
+			[:key :data |
+			key first = $J
+				ifTrue: [jobDictionary at: key put: data]
+				ifFalse: 
+					[key first = $o
+						ifTrue: [distanceDictionary at: key put: data]
+						ifFalse: [resourceDictionary at: key put: data]]].
+	^self

@@ -1,0 +1,41 @@
+applyTransportationTime
+
+	self ganttChart resourceDictionary do: 
+			[:data |
+			(data at: #operations) do: 
+					[:operation |
+					operation previousOperation isNil & operation precedingOperation isNil
+						ifTrue: 
+							[operation
+								startingTime: operation startingTime + operation transportationTime.
+							operation finishingTime: operation startingTime + operation processingTime]
+						ifFalse: 
+							[operation previousOperation isNil & operation precedingOperation notNil
+								ifTrue: 
+									[operation startingTime < (operation precedingOperation finishingTime
+												+ operation transportationTime)
+										ifTrue: 
+											[operation startingTime: operation precedingOperation finishingTime
+														+ operation transportationTime.
+											operation finishingTime: operation startingTime + operation processingTime]]
+								ifFalse: 
+									[operation previousOperation notNil & operation precedingOperation isNil
+										ifTrue: 
+											[operation previousOperation finishingTime + operation transportationTime
+												> operation startingTime
+													ifTrue: 
+														[operation startingTime: operation previousOperation finishingTime
+																	+ operation transportationTime.
+														operation finishingTime: operation startingTime + operation processingTime]]
+										ifFalse: 
+											[| previousFinishingTime precedingFinishingTime |
+											precedingFinishingTime := operation precedingOperation finishingTime
+														+ operation transportationTime.
+											previousFinishingTime := operation previousOperation finishingTime.
+											precedingFinishingTime > previousFinishingTime
+												ifTrue: 
+													[operation startingTime: precedingFinishingTime.
+													operation finishingTime: operation startingTime + operation processingTime]
+												ifFalse: 
+													[operation startingTime: previousFinishingTime.
+													operation finishingTime: operation startingTime + operation processingTime]]]]]]

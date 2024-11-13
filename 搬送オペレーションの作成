@@ -1,0 +1,31 @@
+createTransportationOperation
+
+	| tempResourceDictionary |
+	tempResourceDictionary := Dictionary new.
+	self amrDictionary keysDo: 
+			[:amr |
+			tempResourceDictionary at: amr
+				put: ((Dictionary new)
+						at: #finishingTime put: nil;
+						at: #operations put: OrderedCollection new;
+						yourself)].
+	self ganttChart resourceDictionary do: 
+			[:data |
+			(data at: #operations) do: 
+					[:operation |
+					| amrOperation targetAMR |
+					amrOperation := Operation new.
+					amrOperation
+						startingTime: operation startingTime - operation transportationTime.
+					amrOperation processingTime: operation transportationTime.
+					amrOperation finishingTime: operation startingTime.
+					amrOperation jobName: operation jobName.
+					self amrDictionary keysAndValuesDo: 
+							[:amr :amrData |
+							(amrData at: #destination) = operation resourceName first asSymbol
+								ifTrue: 
+									[targetAMR := amr.
+									amrOperation resourceName: targetAMR]].
+					((tempResourceDictionary at: targetAMR) at: #operations) add: amrOperation]].
+	tempResourceDictionary keysAndValuesDo: [:amr :data|
+		self ganttChart resourceDictionary at: amr put: data]

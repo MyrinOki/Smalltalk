@@ -1,0 +1,31 @@
+allocateOperation: selection
+	"選択されたオペレーションの割り付け"
+
+	| aOperation processingTimeCollection |
+	processingTimeCollection := Set new.
+	selection keysAndValuesDo: 
+			[:resource :job |
+			"オペレーションの作成"
+			aOperation := Operation new.
+			aOperation jobName: job.
+			aOperation
+				processingTime: (((self jobDictionary at: job) at: #processPlan) first
+						at: #processingTime).
+			aOperation dueDate: ((self jobDictionary at: job) at: #dueDate).
+			aOperation jobName: job.
+			aOperation resourceName: resource.
+			aOperation startingTime: self ganttChart presentTime.
+			((self ganttChart resourceDictionary at: resource) at: #operations)
+				add: aOperation.
+			(self ganttChart resourceDictionary at: resource) at: #finishTime
+				put: aOperation startingTime + aOperation processingTime.
+			(self jobDictionary at: job) at: #previousProcess put: resource.
+			((self jobDictionary at: job) at: #processPlan) size = 1
+				ifTrue: [self jobDictionary removeKey: job]
+				ifFalse: [((self jobDictionary at: job) at: #processPlan) removeFirst]].
+	self ganttChart resourceDictionary do: 
+			[:resource |
+			self ganttChart presentTime < (resource at: #finishTime)
+				ifTrue: [processingTimeCollection add: (resource at: #finishTime)]].
+	self ganttChart
+		presentTime: processingTimeCollection asSortedCollection first

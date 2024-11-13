@@ -1,0 +1,40 @@
+createTransportationListAndSetPrecidingOperations
+
+	| jobList operationList transportationDictionary |
+	jobList := Set new.
+	operationList := OrderedCollection new.
+	transportationDictionary := Dictionary new.
+	self ganttChart resourceDictionary do: 
+			[:resource |
+			(resource at: #operations) do: 
+					[:op |
+					jobList add: op jobName.
+					operationList add: op]].
+	jobList asSortedCollection.
+	jobList do: 
+			[:job |
+			| selectedOperations |
+			selectedOperations := operationList select: [:op | op jobName = job].
+			selectedOperations
+				sortWith: [:op1 :op2 | op1 resourceName < op2 resourceName].
+			transportationDictionary at: job put: selectedOperations].
+	self ganttChart transportationDictionary: transportationDictionary.
+	transportationDictionary do: 
+			[:operations |
+			2 to: operations size
+				do: [:i | (operations at: i) precedingOperation: (operations at: i - 1)]].
+	self ganttChart resourceDictionary do: 
+			[:data |
+			(data at: #operations) do: 
+					[:targetOperation |
+					transportationDictionary do: 
+							[:operations |
+							operations do: 
+									[:op |
+									targetOperation jobName = op jobName
+										& (targetOperation resourceName = op resourceName)
+											ifTrue: [targetOperation precedingOperation: op precedingOperation]]]]].
+	transportationDictionary do: 
+			[:operations |
+			2 to: operations size
+				do: [:i | (operations at: i) precedingOperation: (operations at: i - 1)]]

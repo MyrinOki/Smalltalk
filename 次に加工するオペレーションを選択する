@@ -1,0 +1,20 @@
+selectNextOperation: candidateDictionary byRule: aRule
+	"次に加工するオペレーションを選択する"
+
+	| selectedOperations selectedOperationsDictionary |
+	selectedOperationsDictionary := Dictionary new.
+	candidateDictionary keysAndValuesDo: 
+			[:resource :value |
+			value isEmpty
+				ifFalse: 
+					[selectedOperations := self adoptRule: value for: resource by: aRule.
+					value remove: selectedOperations first.
+					candidateDictionary do: 
+							[:tempValue |
+							"選択されたオペレーションが他のリソースの候補に入っている場合削除"
+							tempValue isEmpty
+								ifFalse: 
+									[(tempValue includes: selectedOperations first)
+										ifTrue: [tempValue remove: selectedOperations first]]].
+					selectedOperationsDictionary at: resource put: selectedOperations first]].
+	^selectedOperationsDictionary

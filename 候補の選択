@@ -1,0 +1,25 @@
+pickUpCandidate
+	"現在時刻において割り付け可能なオペレーションを列挙する"
+
+	| candidate candidateDictionary workingOperations |
+	workingOperations := OrderedCollection new.
+	self ganttChart resourceDictionary keysAndValuesDo: 
+			[:resource :value |
+			"加工中のオペレーションを選択肢から除外する"
+			self ganttChart presentTime < (value at: #finishTime)
+				ifTrue: [workingOperations add: (value at: #operations) last jobName]].
+	candidateDictionary := Dictionary new.
+	self ganttChart resourceDictionary keysAndValuesDo: 
+			[:resource :element |
+			"候補の選択"
+			candidate := SortedCollection new.
+			self ganttChart presentTime < (element at: #finishTime)
+				ifFalse: 
+					[self jobDictionary keysAndValuesDo: 
+							[:job :value |
+							(workingOperations includes: job)
+								ifFalse: 
+									[((value at: #processPlan) first at: #Resource) = resource first asSymbol
+										ifTrue: [candidate add: job]]]].
+			candidateDictionary at: resource put: candidate].
+	^candidateDictionary

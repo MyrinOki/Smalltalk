@@ -1,0 +1,11 @@
+calculateFinishingTimeAndPrecedingOperations
+
+	self ganttChart resourceDictionary do: 
+			[:data |
+			(data at: #operations)
+				do: [:op | op finishingTime: op startingTime + op processingTime].
+			2 to: (data at: #operations) size
+				do: 
+					[:i |
+					((data at: #operations) at: i)
+						previousOperation: ((data at: #operations) at: i - 1)]]

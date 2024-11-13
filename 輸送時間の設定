@@ -1,0 +1,29 @@
+setTransportationTime
+
+	| operations transportationInfo |
+	transportationInfo := self ganttChart transportationDictionary.
+	operations := OrderedCollection new.
+	self ganttChart resourceDictionary
+		do: [:resource | (resource at: #operations) do: [:op | operations add: op]].
+	operations sortWith: [:o1 :o2 | o1 startingTime < o2 startingTime].
+	operations do: 
+			[:op |
+			| currentJob processNumber origin destination distance transportationTime amr |
+			currentJob := transportationInfo at: op jobName.
+			processNumber := (transportationInfo at: op jobName) indexOf: op.
+			processNumber = 1
+				ifTrue: 
+					[origin := #S.
+					destination := op resourceName]
+				ifFalse: 
+					[origin := (currentJob at: processNumber - 1) resourceName.
+					destination := op resourceName].
+			distanceDictionary keysAndValuesDo: 
+					[:odNum :data |
+					(data at: #origin) = origin & ((data at: #destination) = destination)
+						ifTrue: [distance := data at: #distance]].
+			self amrDictionary keysAndValuesDo: 
+					[:amrName :data |
+					(data at: #origin) = origin first asSymbol ifTrue: [amr := amrName]].
+			transportationTime := distance * ((amrDictionary at: amr) at: #speed).
+			op transportationTime: transportationTime]
